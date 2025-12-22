@@ -1,0 +1,4 @@
+plant_id,plant_name,capacity_kw,location,installation_date,equipment_type
+PLANT_001,Solar Farm Alpha,500.0,Chennai India,2020-01-15,Monocrystalline
+PLANT_002,Solar Farm Beta,750.0,Mumbai India,2019-06-20,Polycrystalline
+PLANT_003,Solar Farm Gamma,600.0,Bangalore India,2021-03-10,Monocrystalline
