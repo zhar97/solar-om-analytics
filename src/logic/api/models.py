@@ -59,16 +59,32 @@ class PlantDetailResponse(BaseModel):
     )
 
 
+class AnomalyResponse(BaseModel):
+    """Anomaly response model for API endpoints."""
+
+    anomaly_id: str = Field(..., description="Unique anomaly identifier")
+    plant_id: str = Field(..., description="Plant ID")
+    date: str = Field(..., description="Anomaly detection date (ISO format)")
+    metric_name: str = Field(..., description="Metric name (e.g., power_output_kwh)")
+    actual_value: float = Field(..., description="Actual metric value")
+    expected_value: float = Field(..., description="Expected baseline value")
+    deviation_pct: float = Field(..., description="Deviation percentage from baseline")
+    severity: str = Field(..., description="Anomaly severity (low, medium, high, critical)")
+    detected_by: str = Field(..., description="Detection method (zscore, iqr)")
+    status: str = Field(default="active", description="Anomaly status")
+    z_score: Optional[float] = Field(default=None, description="Z-score if detected by Z-score method")
+    iqr_bounds: Optional[Dict[str, float]] = Field(
+        default=None, description="IQR bounds if detected by IQR method"
+    )
+
+
 class GetAnomaliesResponse(BaseModel):
-    """Response for GET /api/v1/plants/{plant_id}/anomalies."""
+    """Response for GET /api/anomalies endpoints."""
 
     success: bool = Field(default=True)
-    anomalies: List[Anomaly] = Field(..., description="List of anomalies")
-    total_count: int = Field(..., description="Total number of anomalies")
-    returned_count: int = Field(..., description="Number of anomalies returned")
-    filters_applied: Dict[str, Any] = Field(
-        default_factory=dict, description="Applied filters"
-    )
+    data: List[AnomalyResponse] = Field(default_factory=list, description="List of anomalies")
+    error: Optional[str] = Field(default=None, description="Error message if failed")
+    error_code: Optional[str] = Field(default=None, description="Error code")
 
 
 class GetInsightsResponse(BaseModel):
