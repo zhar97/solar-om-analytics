@@ -37,7 +37,7 @@ class TestCsvLoader:
         readings = csv_loader.load_readings(str(readings_path))
 
         assert "PLANT_001" in readings
-        assert len(readings["PLANT_001"]) == 6  # 6 readings for PLANT_001
+        assert len(readings["PLANT_001"]) == 13  # 13 readings for PLANT_001
         assert isinstance(readings["PLANT_001"][0], DailyReading)
         assert readings["PLANT_001"][0].power_output_kwh == 450.5
 
