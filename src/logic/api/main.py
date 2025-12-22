@@ -426,3 +426,211 @@ async def get_patterns_by_plant(
             "error": str(e),
             "error_code": "INTERNAL_ERROR",
         }
+
+
+# ============================================================================
+# INSIGHTS ENDPOINTS
+# ============================================================================
+
+@app.get("/api/insights")
+async def get_all_insights(
+    plant_id: Optional[str] = Query(None),
+    insight_type: Optional[str] = Query(None),
+    urgency: Optional[str] = Query(None),
+    min_confidence: float = Query(0, ge=0, le=100),
+    sort_by: str = Query("confidence", regex="^(confidence|urgency|generation_date)$"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=1000),
+):
+    """Get all insights with filtering, sorting, and pagination."""
+    try:
+        from src.logic.analytics.insights_engine import InsightsEngine
+        
+        pipeline, pipeline_result = get_pipeline()
+        
+        if pipeline_result is None:
+            return {
+                "success": False,
+                "insights": [],
+                "error": "Pipeline not initialized",
+            }
+        
+        # Generate insights from anomalies and patterns
+        engine = InsightsEngine(
+            daily_readings=pipeline_result.get("daily_readings", []),
+            anomalies=pipeline_result.get("anomalies", []),
+            patterns=pipeline_result.get("patterns", []),
+        )
+        
+        insights = engine.generate_insights()
+        
+        # Apply filters
+        if plant_id:
+            insights = [i for i in insights if i.plant_id == plant_id]
+        
+        if insight_type:
+            insights = [i for i in insights if i.insight_type == insight_type]
+        
+        if urgency:
+            insights = [i for i in insights if i.urgency == urgency]
+        
+        insights = [i for i in insights if i.confidence >= min_confidence]
+        
+        # Sort
+        reverse = sort_order == "desc"
+        if sort_by == "confidence":
+            insights.sort(key=lambda i: i.confidence, reverse=reverse)
+        elif sort_by == "urgency":
+            urgency_order = {"critical": 3, "high": 2, "medium": 1, "low": 0}
+            insights.sort(
+                key=lambda i: urgency_order.get(i.urgency, -1),
+                reverse=reverse,
+            )
+        elif sort_by == "generation_date":
+            insights.sort(key=lambda i: i.generation_date, reverse=reverse)
+        
+        # Paginate
+        total = len(insights)
+        paginated = insights[skip : skip + limit]
+        
+        # Format response
+        insight_responses = [
+            {
+                "insight_id": insight.insight_id,
+                "plant_id": insight.plant_id,
+                "insight_type": insight.insight_type,
+                "title": insight.title,
+                "description": insight.description,
+                "reasoning": insight.reasoning,
+                "business_impact": insight.business_impact,
+                "confidence": insight.confidence,
+                "recommended_action": insight.recommended_action,
+                "urgency": insight.urgency,
+                "linked_patterns": insight.linked_patterns,
+                "linked_anomalies": insight.linked_anomalies,
+                "generation_date": insight.generation_date,
+                "applicable_date_range": insight.applicable_date_range,
+            }
+            for insight in paginated
+        ]
+        
+        return {
+            "success": True,
+            "insights": insight_responses,
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {
+            "success": False,
+            "insights": [],
+            "error": str(e),
+            "error_code": "INTERNAL_ERROR",
+        }
+
+
+@app.get("/api/insights/{plant_id}")
+async def get_plant_insights(
+    plant_id: str,
+    insight_type: Optional[str] = Query(None),
+    urgency: Optional[str] = Query(None),
+    min_confidence: float = Query(0, ge=0, le=100),
+    sort_by: str = Query("confidence", regex="^(confidence|urgency|generation_date)$"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=1000),
+):
+    """Get insights for a specific plant."""
+    try:
+        from src.logic.analytics.insights_engine import InsightsEngine
+        
+        pipeline, pipeline_result = get_pipeline()
+        
+        if pipeline_result is None:
+            return {
+                "success": False,
+                "insights": [],
+                "error": "Pipeline not initialized",
+            }
+        
+        # Generate insights
+        engine = InsightsEngine(
+            daily_readings=pipeline_result.get("daily_readings", []),
+            anomalies=pipeline_result.get("anomalies", []),
+            patterns=pipeline_result.get("patterns", []),
+        )
+        
+        insights = engine.generate_insights()
+        
+        # Filter by plant_id
+        insights = [i for i in insights if i.plant_id == plant_id]
+        
+        # Apply additional filters
+        if insight_type:
+            insights = [i for i in insights if i.insight_type == insight_type]
+        
+        if urgency:
+            insights = [i for i in insights if i.urgency == urgency]
+        
+        insights = [i for i in insights if i.confidence >= min_confidence]
+        
+        # Sort
+        reverse = sort_order == "desc"
+        if sort_by == "confidence":
+            insights.sort(key=lambda i: i.confidence, reverse=reverse)
+        elif sort_by == "urgency":
+            urgency_order = {"critical": 3, "high": 2, "medium": 1, "low": 0}
+            insights.sort(
+                key=lambda i: urgency_order.get(i.urgency, -1),
+                reverse=reverse,
+            )
+        elif sort_by == "generation_date":
+            insights.sort(key=lambda i: i.generation_date, reverse=reverse)
+        
+        # Paginate
+        total = len(insights)
+        paginated = insights[skip : skip + limit]
+        
+        # Format response
+        insight_responses = [
+            {
+                "insight_id": insight.insight_id,
+                "plant_id": insight.plant_id,
+                "insight_type": insight.insight_type,
+                "title": insight.title,
+                "description": insight.description,
+                "reasoning": insight.reasoning,
+                "business_impact": insight.business_impact,
+                "confidence": insight.confidence,
+                "recommended_action": insight.recommended_action,
+                "urgency": insight.urgency,
+                "linked_patterns": insight.linked_patterns,
+                "linked_anomalies": insight.linked_anomalies,
+                "generation_date": insight.generation_date,
+                "applicable_date_range": insight.applicable_date_range,
+            }
+            for insight in paginated
+        ]
+        
+        return {
+            "success": True,
+            "insights": insight_responses,
+            "total": total,
+            "skip": skip,
+            "limit": limit,
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {
+            "success": False,
+            "insights": [],
+            "error": str(e),
+            "error_code": "INTERNAL_ERROR",
+        }
