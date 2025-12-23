@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Bar } from 'recharts';
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart } from 'recharts';
 
 export interface Anomaly {
   anomaly_id: string;
@@ -27,21 +27,6 @@ export interface AnomalyListProps {
   metric?: string;
   onAnomalySelect?: (anomaly: Anomaly) => void;
 }
-
-const getSeverityColor = (severity: string): string => {
-  switch (severity) {
-    case 'low':
-      return '#4CAF50';
-    case 'medium':
-      return '#FF9800';
-    case 'high':
-      return '#FF5722';
-    case 'critical':
-      return '#9C27B0';
-    default:
-      return '#9E9E9E';
-  }
-};
 
 const getSeverityBadgeClass = (severity: string): string => {
   switch (severity) {
