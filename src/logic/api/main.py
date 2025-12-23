@@ -197,12 +197,12 @@ async def get_plants():
         plants_data = [
             {
                 "plant_id": plant.plant_id,
-                "name": plant.name,
+                "name": plant.plant_name,
                 "location": plant.location,
-                "capacity_kwp": plant.capacity_kwp,
+                "capacity_kwp": plant.capacity_kw,
                 "anomaly_count": len(result.anomalies_by_plant.get(plant.plant_id, [])),
             }
-            for plant in result.plants
+            for plant in result.plants.values()
         ]
         
         return {
@@ -245,7 +245,7 @@ async def get_all_patterns(
         pattern_detector = PatternDetector()
         all_patterns = []
         
-        for plant in result.plants:
+        for plant in result.plants.values():
             plant_readings = result.readings_by_plant.get(plant.plant_id, [])
             if plant_readings:
                 patterns = pattern_detector.detect(
